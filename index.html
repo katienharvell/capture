@@ -245,14 +245,11 @@ function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 function fmtDate(d,t){if(!d)return null;try{const[y,m,dy]=d.split('-').map(Number);let s=new Date(y,m-1,dy).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});if(t){const[h,mi]=t.split(':').map(Number);s+=' · '+new Date(y,m-1,dy,h,mi).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}return s;}catch{return d;}}
 function toICS(d,t){if(!d)return null;const[y,m,dy]=d.split('-');if(!t)return`${y}${m}${dy}`;const[h,mi]=t.split(':');return`${y}${m}${dy}T${h}${mi}00`;}
 function dlFile(content,name,mime){
+  const blob=new Blob([content],{type:mime});
+  const url=URL.createObjectURL(blob);
   const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
-  if(isIOS){
-    window.location.href='data:'+mime+';charset=utf-8,'+encodeURIComponent(content);
-  } else {
-    const blob=new Blob([content],{type:mime});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);
-  }
+  if(isIOS){window.location.href=url;}
+  else{const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);}
 }
 function safeFile(s){return(s||'capture').replace(/[^a-z0-9]/gi,'_').slice(0,40);}
 
@@ -287,6 +284,7 @@ function addCard(item){
     const dt=fmtDate(item.date,item.start_time);
     const meta=[dt,item.location?'📍 '+item.location:null,item.description].filter(Boolean).join('\n');
   const calUid='e'+Date.now()+Math.random().toString(36).slice(2,6);
+  const calDest=getRoute(item.category,'calendar')||'Personal';
     card.innerHTML=`<div class="card-head"><div class="card-icon ci-cal"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="11" rx="1.5" stroke="var(--blue)" stroke-width="1.2"/><line x1="1" y1="5.5" x2="13" y2="5.5" stroke="var(--blue)" stroke-width="1.2"/><line x1="4" y1="0.5" x2="4" y2="3.5" stroke="var(--blue)" stroke-width="1.2" stroke-linecap="round"/><line x1="10" y1="0.5" x2="10" y2="3.5" stroke="var(--blue)" stroke-width="1.2" stroke-linecap="round"/></svg></div><div class="card-info"><div class="card-type-row"><span class="card-type ct-cal">Calendar</span>${pill}</div><div class="card-title">${esc(item.title)}</div></div></div>${meta?`<div class="card-meta">${esc(meta)}</div>`:''}<div class="card-foot"><button class="card-btn btn-cal">Add to Calendar ↓</button></div>`;
     card.querySelector('.btn-cal').onclick=()=>dlCalendar(item);
   } else if(item.type==='reminder'){
