@@ -257,15 +257,42 @@ function dlFile(content,name,mime){
 function safeFile(s){return(s||'capture').replace(/[^a-z0-9]/gi,'_').slice(0,40);}
 
 function dlCalendar(item){
-  const calName=getRoute(item.category,'calendar');
-  const start=toICS(item.date,item.start_time)||'19700101';
-  let end=toICS(item.date,item.end_time);
-  if(!end&&item.start_time&&item.date){const[y,m,d]=item.date.split('-').map(Number);const[h,mi]=item.start_time.split(':').map(Number);const dt=new Date(y,m-1,d,h+1,mi);end=String(dt.getFullYear())+String(dt.getMonth()+1).padStart(2,'0')+String(dt.getDate()).padStart(2,'0')+'T'+String(dt.getHours()).padStart(2,'0')+String(dt.getMinutes()).padStart(2,'0')+'00';}
-  end=end||start;
-  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Capture//EN',`X-WR-CALNAME:${calName}`,'METHOD:PUBLISH','BEGIN:VEVENT',`SUMMARY:${item.title}`,item.all_day?`DTSTART;VALUE=DATE:${start}`:`DTSTART:${start}`,item.all_day?`DTEND;VALUE=DATE:${end}`:`DTEND:${end}`,item.location?`LOCATION:${item.location}`:'',item.description?`DESCRIPTION:${item.description}`:'',`UID:${Date.now()}@capture`,'END:VEVENT','END:VCALENDAR'].filter(Boolean);
-  const ics=lines.join('\r\n');
-  const icsUrl='https://sweet-pine-aff9.katienharvell.workers.dev/ics?data='+encodeURIComponent(ics);
-  window.open(icsUrl,'_blank');
+  // Build a shortcuts URL to add directly to calendar
+  const title=encodeURIComponent(item.title||'Event');
+  const calName=encodeURIComponent(getRoute(item.category,'calendar')||'Personal');
+  const notes=encodeURIComponent(item.description||'');
+  const location=encodeURIComponent(item.location||'');
+
+  // Format start date/time for Shortcuts
+  let startDate='';
+  if(item.date){
+    const [y,m,d]=item.date.split('-');
+    if(item.start_time){
+      const [h,mi]=item.start_time.split(':');
+      startDate=encodeURIComponent(`${m}/${d}/${y} ${h}:${mi}`);
+    } else {
+      startDate=encodeURIComponent(`${m}/${d}/${y}`);
+    }
+  }
+
+  // Use x-callback-url for Fantastical if installed, fallback to clipboard + Calendar
+  const fantastical=`fantastical2://parse?sentence=${title}${item.date?' '+startDate:''}&notes=${notes}&loc=${location}&cal=${calName}`;
+
+  // Try Fantastical first, then copy details and open Calendar
+  const testLink=document.createElement('a');
+  testLink.href=fantastical;
+
+  // Copy event details to clipboard and open Calendar.app
+  const eventText=[
+    item.title,
+    item.date ? fmtDate(item.date,item.start_time) : '',
+    item.location ? '📍 '+item.location : '',
+    item.description || '',
+    'Calendar: '+getRoute(item.category,'calendar')
+  ].filter(Boolean).join('\n');
+
+  navigator.clipboard.writeText(eventText).catch(()=>{});
+  window.location.href='calshow://';
 }
 
 function dlReminder(item){
@@ -288,8 +315,14 @@ function addCard(item){
   if(item.type==='calendar'){
     const dt=fmtDate(item.date,item.start_time);
     const meta=[dt,item.location?'📍 '+item.location:null,item.description].filter(Boolean).join('\n');
-    card.innerHTML=`<div class="card-head"><div class="card-icon ci-cal"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="11" rx="1.5" stroke="var(--blue)" stroke-width="1.2"/><line x1="1" y1="5.5" x2="13" y2="5.5" stroke="var(--blue)" stroke-width="1.2"/><line x1="4" y1="0.5" x2="4" y2="3.5" stroke="var(--blue)" stroke-width="1.2" stroke-linecap="round"/><line x1="10" y1="0.5" x2="10" y2="3.5" stroke="var(--blue)" stroke-width="1.2" stroke-linecap="round"/></svg></div><div class="card-info"><div class="card-type-row"><span class="card-type ct-cal">Calendar</span>${pill}</div><div class="card-title">${esc(item.title)}</div></div></div>${meta?`<div class="card-meta">${esc(meta)}</div>`:''}<div class="card-foot"><button class="card-btn btn-cal">Add to Calendar ↓</button></div>`;
-    card.querySelector('.btn-cal').onclick=()=>dlCalendar(item);
+  const calUid='e'+Date.now()+Math.random().toString(36).slice(2,6);
+  const calDest=getRoute(item.category,'calendar')||'Personal';
+    card.innerHTML=`<div class="card-head"><div class="card-icon ci-cal"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="11" rx="1.5" stroke="var(--blue)" stroke-width="1.2"/><line x1="1" y1="5.5" x2="13" y2="5.5" stroke="var(--blue)" stroke-width="1.2"/><line x1="4" y1="0.5" x2="4" y2="3.5" stroke="var(--blue)" stroke-width="1.2" stroke-linecap="round"/><line x1="10" y1="0.5" x2="10" y2="3.5" stroke="var(--blue)" stroke-width="1.2" stroke-linecap="round"/></svg></div><div class="card-info"><div class="card-type-row"><span class="card-type ct-cal">Calendar</span>${pill}</div><div class="card-title">${esc(item.title)}</div></div></div>${meta?`<div class="card-meta">${esc(meta)}</div>`:''}<div class="card-foot"><span class="toast-txt" id="ctxt-${calUid}"></span><button class="card-btn btn-cal" id="cadd-${calUid}">Open Calendar →</button></div>`;
+  card.querySelector(`#cadd-${calUid}`).onclick=()=>{
+    dlCalendar(item);
+    card.querySelector(`#ctxt-${calUid}`).textContent='Copied — add to '+calDest;
+    setTimeout(()=>{card.querySelector(`#ctxt-${calUid}`).textContent='';},3000);
+  };
   } else if(item.type==='reminder'){
     const dt=fmtDate(item.due_date,item.due_time);
     const pri={high:'⚑ High priority',medium:'Medium priority',low:'Low priority'}[item.priority]||'';
