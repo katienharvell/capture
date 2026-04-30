@@ -263,7 +263,8 @@ function dlCalendar(item){
   if(!end&&item.start_time&&item.date){const[y,m,d]=item.date.split('-').map(Number);const[h,mi]=item.start_time.split(':').map(Number);const dt=new Date(y,m-1,d,h+1,mi);end=String(dt.getFullYear())+String(dt.getMonth()+1).padStart(2,'0')+String(dt.getDate()).padStart(2,'0')+'T'+String(dt.getHours()).padStart(2,'0')+String(dt.getMinutes()).padStart(2,'0')+'00';}
   end=end||start;
   const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Capture//EN',`X-WR-CALNAME:${calName}`,'METHOD:PUBLISH','BEGIN:VEVENT',`SUMMARY:${item.title}`,item.all_day?`DTSTART;VALUE=DATE:${start}`:`DTSTART:${start}`,item.all_day?`DTEND;VALUE=DATE:${end}`:`DTEND:${end}`,item.location?`LOCATION:${item.location}`:'',item.description?`DESCRIPTION:${item.description}`:'',`UID:${Date.now()}@capture`,'END:VEVENT','END:VCALENDAR'].filter(Boolean);
-  dlFile(lines.join('\r\n'),safeFile(item.title)+'.ics','text/calendar');
+  const ics=lines.join('\r\n');
+  window.location.href='https://sweet-pine-aff9.katienharvell.workers.dev/ics?data='+encodeURIComponent(ics);
 }
 
 function dlReminder(item){
