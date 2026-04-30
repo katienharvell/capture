@@ -103,14 +103,14 @@ h1{font-size:18px;font-weight:600;letter-spacing:-0.3px}
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.42 1.42M11.53 11.53l1.42 1.42M3.05 12.95l1.42-1.42M11.53 4.47l1.42-1.42" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
     </button>
   </header>
- 
+
   <div id="feed">
     <div class="empty" id="emptyState">
       <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="4" y="4" width="18" height="18" rx="4" fill="currentColor"/><rect x="26" y="4" width="18" height="18" rx="4" fill="currentColor"/><rect x="4" y="26" width="18" height="18" rx="4" fill="currentColor"/><rect x="26" y="26" width="18" height="18" rx="4" fill="currentColor" opacity="0.3"/></svg>
       <p>Speak, type, or attach a photo.<br/>Automatically routed to<br/>School · Church · Harvells · Personal</p>
     </div>
   </div>
- 
+
   <div id="dock">
     <div id="input-box">
       <textarea id="inp" placeholder="What's on your mind…" rows="2"></textarea>
@@ -135,7 +135,7 @@ h1{font-size:18px;font-weight:600;letter-spacing:-0.3px}
     </div>
   </div>
 </div>
- 
+
 <div id="settings-overlay" class="hidden">
   <div id="settings-sheet">
     <div class="sh"></div>
@@ -158,11 +158,11 @@ h1{font-size:18px;font-weight:600;letter-spacing:-0.3px}
     <button class="sheet-dis" id="dismissSheet">Cancel</button>
   </div>
 </div>
- 
+
 <script>
 const ROUTES={school:{cal:'School',rem:'School'},church:{cal:'Church',rem:'Church'},family:{cal:'Harvells',rem:'Harvells'},other:{cal:'Personal',rem:null}};
 function getRoute(cat,type){const r=ROUTES[cat]||ROUTES.other;return type==='calendar'?r.cal:r.rem;}
- 
+
 const overlay=document.getElementById('settings-overlay');
 const apiInput=document.getElementById('api-input');
 function getKey(){return localStorage.getItem('capture_api_key')||'';}
@@ -172,26 +172,26 @@ document.getElementById('saveKey').onclick=()=>{const k=apiInput.value.trim();if
 document.getElementById('dismissSheet').onclick=()=>overlay.classList.add('hidden');
 overlay.onclick=e=>{if(e.target===overlay)overlay.classList.add('hidden');};
 if(!getKey())openSettings();
- 
+
 const micBtn=document.getElementById('micBtn'),voiceHint=document.getElementById('voice-hint'),inp=document.getElementById('inp');
 let recog=null,isRec=false;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 if(SR){recog=new SR();recog.continuous=false;recog.interimResults=true;recog.onresult=e=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;inp.value=t;autoH();};recog.onend=()=>{isRec=false;micBtn.classList.remove('recording');micBtn.innerHTML=micSVG();voiceHint.style.display='none';};}
 micBtn.onclick=()=>{if(!recog){alert('Voice input requires Chrome or Safari.');return;}if(isRec)recog.stop();else{recog.start();isRec=true;micBtn.classList.add('recording');micBtn.innerHTML='<div class="rec-dot"></div>';voiceHint.style.display='block';}};
 function micSVG(){return`<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="4" y="0.5" width="7" height="9" rx="3.5" stroke="currentColor" stroke-width="1.25"/><path d="M2 7C2 10.31 4.46 13 7.5 13C10.54 13 13 10.31 13 7" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><line x1="7.5" y1="13" x2="7.5" y2="14.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></svg>`;}
- 
+
 const imgBtn=document.getElementById('imgBtn'),fileIn=document.getElementById('fileIn'),imgPrev=document.getElementById('img-preview'),prevImg=document.getElementById('prev-img'),prevNm=document.getElementById('prev-name'),rmImg=document.getElementById('rmImg');
 let imgB64=null,imgMime=null;
 imgBtn.onclick=()=>fileIn.click();
 fileIn.onchange=e=>{const f=e.target.files[0];if(!f)return;imgMime=f.type;const r=new FileReader();r.onload=ev=>{imgB64=ev.target.result.split(',')[1];prevImg.src=ev.target.result;prevNm.textContent=f.name;imgPrev.style.display='flex';};r.readAsDataURL(f);};
 rmImg.onclick=()=>{imgB64=null;imgMime=null;imgPrev.style.display='none';fileIn.value='';};
- 
+
 function autoH(){inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,140)+'px';}
 inp.addEventListener('input',autoH);
 inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendBtn.click();}});
- 
+
 const sendBtn=document.getElementById('sendBtn'),feed=document.getElementById('feed'),empty=document.getElementById('emptyState');
- 
+
 sendBtn.onclick=async()=>{
   const key=getKey();if(!key){openSettings();return;}
   const txt=inp.value.trim();if(!txt&&!imgB64)return;
@@ -204,19 +204,23 @@ sendBtn.onclick=async()=>{
     const sys=`You classify natural language into Apple app items for a family.
 Today is ${dateStr}.
 Return ONLY a JSON array — no markdown, no explanation.
- 
+
 Assign a "category" to each item:
 - "school" — school, classes, homework, teachers, PTA, school events
 - "church" — church, service, bible study, ministry, worship
 - "family" — family, the Harvells, home, kids, spouse, household
 - "other"  — everything else
- 
+
 Shapes:
 Calendar event: {"type":"calendar","category":"school|church|family|other","title":"string","date":"YYYY-MM-DD or null","start_time":"HH:MM or null","end_time":"HH:MM or null","location":"string or null","description":"string or null","all_day":boolean}
 Reminder: {"type":"reminder","category":"school|church|family|other","title":"string","due_date":"YYYY-MM-DD or null","due_time":"HH:MM or null","notes":"string or null","priority":"low|medium|high"}
 Note: {"type":"note","category":"school|church|family|other","title":"string","content":"string"}
- 
-Rules: specific times → calendar. Tasks/to-dos → reminder. Ideas/info → note. Return array always. Times in 24h. No date → null.`;
+
+Rules:
+- Specific times or scheduled events → calendar. Tasks/to-dos/reminders → reminder. Ideas/info → note.
+- Return array always. Times in 24h format.
+- For relative dates like "Monday", "next Friday", "tomorrow" — calculate the actual YYYY-MM-DD date relative to today.
+- Only use null for date if absolutely no time reference is given.`;
     const content=[];
     if(imgB64)content.push({type:'image',source:{type:'base64',media_type:imgMime,data:imgB64}});
     content.push({type:'text',text:txt||'Extract actionable items from this image.'});
@@ -236,7 +240,7 @@ Rules: specific times → calendar. Tasks/to-dos → reminder. Ideas/info → no
   }
   sendBtn.disabled=false;sendBtn.textContent='Process';
 };
- 
+
 function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''}
 function fmtDate(d,t){if(!d)return null;try{const[y,m,dy]=d.split('-').map(Number);let s=new Date(y,m-1,dy).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});if(t){const[h,mi]=t.split(':').map(Number);s+=' · '+new Date(y,m-1,dy,h,mi).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}return s;}catch{return d;}}
 function toICS(d,t){if(!d)return null;const[y,m,dy]=d.split('-');if(!t)return`${y}${m}${dy}`;const[h,mi]=t.split(':');return`${y}${m}${dy}T${h}${mi}00`;}
@@ -251,7 +255,7 @@ function dlFile(content,name,mime){
   }
 }
 function safeFile(s){return(s||'capture').replace(/[^a-z0-9]/gi,'_').slice(0,40);}
- 
+
 function dlCalendar(item){
   const calName=getRoute(item.category,'calendar');
   const start=toICS(item.date,item.start_time)||'19700101';
@@ -261,7 +265,7 @@ function dlCalendar(item){
   const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Capture//EN',`X-WR-CALNAME:${calName}`,'METHOD:PUBLISH','BEGIN:VEVENT',`SUMMARY:${item.title}`,item.all_day?`DTSTART;VALUE=DATE:${start}`:`DTSTART:${start}`,item.all_day?`DTEND;VALUE=DATE:${end}`:`DTEND:${end}`,item.location?`LOCATION:${item.location}`:'',item.description?`DESCRIPTION:${item.description}`:'',`UID:${Date.now()}@capture`,'END:VEVENT','END:VCALENDAR'].filter(Boolean);
   dlFile(lines.join('\r\n'),safeFile(item.title)+'.ics','text/calendar');
 }
- 
+
 function dlReminder(item){
   const listName=getRoute(item.category,'reminder');
   const due=toICS(item.due_date,item.due_time);
@@ -269,16 +273,16 @@ function dlReminder(item){
   const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Capture//EN',listName?`X-WR-CALNAME:${listName}`:'','BEGIN:VTODO',`SUMMARY:${item.title}`,due?`DUE:${due}`:'',`PRIORITY:${pri}`,item.notes?`DESCRIPTION:${item.notes}`:'',`UID:${Date.now()}@capture`,'END:VTODO','END:VCALENDAR'].filter(Boolean);
   dlFile(lines.join('\r\n'),safeFile(item.title)+'.ics','text/calendar');
 }
- 
+
 const CAT_LABELS={school:'School',church:'Church',family:'Harvells',other:''};
 function routeLabel(item){if(item.type==='note')return CAT_LABELS[item.category]||'';const d=getRoute(item.category,item.type);return d||'Reminders';}
- 
+
 function addCard(item){
   const card=document.createElement('div');card.className='card';
   const uid='c'+Date.now()+Math.random().toString(36).slice(2,6);
   const dest=routeLabel(item);
   const pill=dest?`<span class="route-pill">${esc(dest)}</span>`:'';
- 
+
   if(item.type==='calendar'){
     const dt=fmtDate(item.date,item.start_time);
     const meta=[dt,item.location?'📍 '+item.location:null,item.description].filter(Boolean).join('\n');
