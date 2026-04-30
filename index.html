@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Capture</title>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Capture"/>
+<meta name="theme-color" content="#f7f7f2"/>
+<link rel="manifest" href="manifest.json"/>
+<style>
+:root{--bg:#f7f7f2;--surface:#fff;--border:rgba(0,0,0,0.1);--border-mid:rgba(0,0,0,0.18);--text:#1a1a1a;--text-2:#555;--text-3:#999;--blue:#0a84ff;--blue-bg:#e8f2ff;--orange:#c85a00;--orange-bg:#fff0e0;--green:#1a7a4a;--green-bg:#e4f5ec;--red:#d1362f;--red-bg:#fde8e7;--r:14px;--rs:9px;--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root{--bg:#141414;--surface:#1e1e1e;--border:rgba(255,255,255,0.1);--border-mid:rgba(255,255,255,0.18);--text:#f0f0f0;--text-2:#aaa;--text-3:#666;--blue:#3fa4ff;--blue-bg:#0a2340;--orange:#ffb248;--orange-bg:#2a1800;--green:#3dd68c;--green-bg:#0b2218;--red-bg:#2a0808}}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;color:var(--text);overflow:hidden}
+#app{display:flex;flex-direction:column;height:100%;padding-top:var(--st);padding-bottom:var(--sb)}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;flex-shrink:0}
+.logo-row{display:flex;align-items:center;gap:9px}
+.logo{width:30px;height:30px;background:var(--surface);border:0.5px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center}
+h1{font-size:18px;font-weight:600;letter-spacing:-0.3px}
+.hdr-btn{width:34px;height:34px;background:var(--surface);border:0.5px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2)}
+#feed{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 16px 12px;display:flex;flex-direction:column;gap:10px}
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-3);padding:40px 0}
+.empty svg{opacity:0.35}
+.empty p{font-size:14px;text-align:center;line-height:1.6}
+.card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--r);padding:13px 14px 11px;animation:ci .22s ease}
+@keyframes ci{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.card-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px}
+.card-icon{width:28px;height:28px;flex-shrink:0;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.ci-cal{background:var(--blue-bg)}.ci-rem{background:var(--orange-bg)}.ci-note{background:var(--green-bg)}
+.card-info{flex:1;min-width:0}
+.card-type-row{display:flex;align-items:center;gap:5px;margin-bottom:2px}
+.card-type{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.ct-cal{color:var(--blue)}.ct-rem{color:var(--orange)}.ct-note{color:var(--green)}
+.route-pill{font-size:10px;font-weight:500;padding:1px 7px;border-radius:20px;background:var(--bg);border:0.5px solid var(--border-mid);color:var(--text-2);white-space:nowrap}
+.card-title{font-size:15px;font-weight:600;line-height:1.3}
+.card-meta{font-size:13px;color:var(--text-2);line-height:1.55;margin:5px 0 10px 38px;white-space:pre-wrap}
+.card-foot{display:flex;align-items:center;justify-content:flex-end;gap:7px}
+.toast-txt{font-size:12px;color:var(--green);margin-right:auto}
+.card-btn{height:33px;padding:0 14px;font-size:13px;font-weight:500;border-radius:20px;cursor:pointer;border:0.5px solid var(--border-mid);background:transparent;color:var(--text);font-family:inherit;transition:opacity .1s}
+.card-btn:active{opacity:0.6}
+.btn-cal{border-color:var(--blue);color:var(--blue)}.btn-rem{border-color:var(--orange);color:var(--orange)}.btn-note{border-color:var(--green);color:var(--green)}
+#dock{flex-shrink:0;padding:10px 14px 12px;background:var(--bg);border-top:0.5px solid var(--border)}
+#input-box{background:var(--surface);border:0.5px solid var(--border-mid);border-radius:var(--r);padding:11px 12px 10px;margin-bottom:9px}
+#inp{width:100%;border:none;outline:none;resize:none;font-family:inherit;font-size:15px;color:var(--text);background:transparent;min-height:52px;max-height:140px;line-height:1.5;overflow-y:auto}
+#inp::placeholder{color:var(--text-3)}
+#img-preview{display:none;align-items:center;gap:8px;margin-top:8px;padding:7px 8px;background:var(--bg);border-radius:var(--rs)}
+#prev-img{width:40px;height:40px;object-fit:cover;border-radius:6px}
+#prev-name{font-size:12px;color:var(--text-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rm-btn{border:none;background:none;color:var(--text-3);font-size:18px;cursor:pointer;padding:0 2px;line-height:1}
+#voice-hint{display:none;font-size:12px;color:var(--red);margin-top:6px}
+.dock-row{display:flex;align-items:center;justify-content:space-between}
+.tools{display:flex;gap:7px}
+.tool-btn{width:40px;height:40px;background:var(--bg);border:0.5px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-2);flex-shrink:0}
+.tool-btn:active{background:var(--border)}
+.tool-btn.recording{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+.rec-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.send-btn{height:40px;padding:0 22px;background:var(--text);color:var(--bg);border:none;border-radius:20px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;transition:opacity .1s}
+.send-btn:active{opacity:0.7}.send-btn:disabled{opacity:0.35}
+.loading-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--r);padding:13px 14px;display:flex;align-items:center;gap:10px}
+.dots{display:flex;gap:5px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--text-3);animation:hop 1.1s infinite}
+.dot:nth-child(2){animation-delay:.17s}.dot:nth-child(3){animation-delay:.34s}
+@keyframes hop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.loading-txt{font-size:14px;color:var(--text-2)}
+#settings-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,0.45);display:flex;align-items:flex-end;padding-bottom:var(--sb);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+#settings-sheet{width:100%;background:var(--surface);border-radius:20px 20px 0 0;padding:20px 20px 28px;animation:su .28s ease;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+@keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sh{width:36px;height:4px;background:var(--border-mid);border-radius:2px;margin:0 auto 20px}
+.st{font-size:17px;font-weight:600;margin-bottom:4px}
+.ss{font-size:13px;color:var(--text-2);line-height:1.5;margin-bottom:18px}
+.ss a{color:var(--blue);text-decoration:none}
+.sec{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-3);margin:18px 0 8px}
+.rtable{width:100%;border-collapse:collapse;margin-bottom:4px}
+.rtable td{padding:8px 0;font-size:13px;border-bottom:0.5px solid var(--border)}
+.rtable tr:last-child td{border-bottom:none}
+.rtable td:first-child{color:var(--text-2);width:55%}
+.rtable td:last-child{font-weight:500;color:var(--text);text-align:right}
+#api-input{width:100%;height:46px;background:var(--bg);border:0.5px solid var(--border-mid);border-radius:var(--rs);padding:0 14px;font-family:'SF Mono',monospace;font-size:13px;color:var(--text);outline:none;margin-bottom:14px}
+#api-input:focus{border-color:var(--blue)}
+.sheet-save{width:100%;height:50px;background:var(--blue);color:#fff;border:none;border-radius:var(--rs);font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:10px}
+.sheet-dis{width:100%;height:44px;background:transparent;border:0.5px solid var(--border);border-radius:var(--rs);font-size:15px;font-family:inherit;color:var(--text-2);cursor:pointer}
+#settings-overlay.hidden{display:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo-row">
+      <div class="logo">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <rect x="1" y="1" width="7" height="7" rx="1.5" fill="#0a84ff" opacity="0.85"/>
+          <rect x="10" y="1" width="7" height="7" rx="1.5" fill="#c85a00" opacity="0.85"/>
+          <rect x="1" y="10" width="7" height="7" rx="1.5" fill="#1a7a4a" opacity="0.85"/>
+          <rect x="10" y="10" width="7" height="7" rx="1.5" fill="#aaa" opacity="0.4"/>
+        </svg>
+      </div>
+      <h1>Capture</h1>
+    </div>
+    <button class="hdr-btn" id="settingsBtn" aria-label="Settings">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.42 1.42M11.53 11.53l1.42 1.42M3.05 12.95l1.42-1.42M11.53 4.47l1.42-1.42" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+    </button>
+  </header>
+ 
+  <div id="feed">
+    <div class="empty" id="emptyState">
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect x="4" y="4" width="18" height="18" rx="4" fill="currentColor"/><rect x="26" y="4" width="18" height="18" rx="4" fill="currentColor"/><rect x="4" y="26" width="18" height="18" rx="4" fill="currentColor"/><rect x="26" y="26" width="18" height="18" rx="4" fill="currentColor" opacity="0.3"/></svg>
+      <p>Speak, type, or attach a photo.<br/>Automatically routed to<br/>School · Church · Harvells · Personal</p>
+    </div>
+  </div>
+ 
+  <div id="dock">
+    <div id="input-box">
+      <textarea id="inp" placeholder="What's on your mind…" rows="2"></textarea>
+      <div id="img-preview">
+        <img id="prev-img" src="" alt=""/>
+        <span id="prev-name"></span>
+        <button class="rm-btn" id="rmImg">×</button>
+      </div>
+      <p id="voice-hint">🔴 Listening — tap mic again to stop</p>
+    </div>
+    <div class="dock-row">
+      <div class="tools">
+        <button class="tool-btn" id="micBtn" aria-label="Voice input">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="4" y="0.5" width="7" height="9" rx="3.5" stroke="currentColor" stroke-width="1.25"/><path d="M2 7C2 10.31 4.46 13 7.5 13C10.54 13 13 10.31 13 7" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><line x1="7.5" y1="13" x2="7.5" y2="14.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></svg>
+        </button>
+        <button class="tool-btn" id="imgBtn" aria-label="Attach image">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="0.5" y="2" width="14" height="11" rx="2" stroke="currentColor" stroke-width="1.25"/><circle cx="4.5" cy="6" r="1.25" fill="currentColor"/><path d="M0.5 10.5L4 7.5L6.5 10.5L9.5 7L14.5 10.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <input type="file" id="fileIn" accept="image/*" capture="environment" style="display:none"/>
+      </div>
+      <button class="send-btn" id="sendBtn">Process</button>
+    </div>
+  </div>
+</div>
+ 
+<div id="settings-overlay" class="hidden">
+  <div id="settings-sheet">
+    <div class="sh"></div>
+    <p class="st">Settings</p>
+    <p class="sec">API Key</p>
+    <p class="ss">Stored only on this device. Get one free at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></p>
+    <input type="password" id="api-input" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false"/>
+    <p class="sec">Routing Rules</p>
+    <p class="ss" style="margin-bottom:10px;">Items are automatically sorted by topic into these Apple calendars and lists:</p>
+    <table class="rtable">
+      <tr><td>School events &amp; reminders</td><td>→ School</td></tr>
+      <tr><td>Church events &amp; reminders</td><td>→ Church</td></tr>
+      <tr><td>Family events &amp; reminders</td><td>→ Harvells</td></tr>
+      <tr><td>Other reminders</td><td>→ Reminders (default)</td></tr>
+      <tr><td>Other events</td><td>→ Personal</td></tr>
+      <tr><td>Notes</td><td>→ Notes.app</td></tr>
+    </table>
+    <div style="height:18px"></div>
+    <button class="sheet-save" id="saveKey">Save</button>
+    <button class="sheet-dis" id="dismissSheet">Cancel</button>
+  </div>
+</div>
+ 
+<script>
+const ROUTES={school:{cal:'School',rem:'School'},church:{cal:'Church',rem:'Church'},family:{cal:'Harvells',rem:'Harvells'},other:{cal:'Personal',rem:null}};
+function getRoute(cat,type){const r=ROUTES[cat]||ROUTES.other;return type==='calendar'?r.cal:r.rem;}
+ 
+const overlay=document.getElementById('settings-overlay');
+const apiInput=document.getElementById('api-input');
+function getKey(){return localStorage.getItem('capture_api_key')||'';}
+function openSettings(){apiInput.value=getKey();overlay.classList.remove('hidden');}
+document.getElementById('settingsBtn').onclick=openSettings;
+document.getElementById('saveKey').onclick=()=>{const k=apiInput.value.trim();if(!k){apiInput.focus();return;}localStorage.setItem('capture_api_key',k);overlay.classList.add('hidden');};
+document.getElementById('dismissSheet').onclick=()=>overlay.classList.add('hidden');
+overlay.onclick=e=>{if(e.target===overlay)overlay.classList.add('hidden');};
+if(!getKey())openSettings();
+ 
+const micBtn=document.getElementById('micBtn'),voiceHint=document.getElementById('voice-hint'),inp=document.getElementById('inp');
+let recog=null,isRec=false;
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(SR){recog=new SR();recog.continuous=false;recog.interimResults=true;recog.onresult=e=>{let t='';for(let i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;inp.value=t;autoH();};recog.onend=()=>{isRec=false;micBtn.classList.remove('recording');micBtn.innerHTML=micSVG();voiceHint.style.display='none';};}
+micBtn.onclick=()=>{if(!recog){alert('Voice input requires Chrome or Safari.');return;}if(isRec)recog.stop();else{recog.start();isRec=true;micBtn.classList.add('recording');micBtn.innerHTML='<div class="rec-dot"></div>';voiceHint.style.display='block';}};
+function micSVG(){return`<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="4" y="0.5" width="7" height="9" rx="3.5" stroke="currentColor" stroke-width="1.25"/><path d="M2 7C2 10.31 4.46 13 7.5 13C10.54 13 13 10.31 13 7" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><line x1="7.5" y1="13" x2="7.5" y2="14.5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/></svg>`;}
+ 
+const imgBtn=document.getElementById('imgBtn'),fileIn=document.getElementById('fileIn'),imgPrev=document.getElementById('img-preview'),prevImg=document.getElementById('prev-img'),prevNm=document.getElementById('prev-name'),rmImg=document.getElementById('rmImg');
+let imgB64=null,imgMime=null;
+imgBtn.onclick=()=>fileIn.click();
+fileIn.onchange=e=>{const f=e.target.files[0];if(!f)return;imgMime=f.type;const r=new FileReader();r.onload=ev=>{imgB64=ev.target.result.split(',')[1];prevImg.src=ev.target.result;prevNm.textContent=f.name;imgPrev.style.display='flex';};r.readAsDataURL(f);};
+rmImg.onclick=()=>{imgB64=null;imgMime=null;imgPrev.style.display='none';fileIn.value='';};
+ 
+function autoH(){inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,140)+'px';}
+inp.addEventListener('input',autoH);
+inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendBtn.click();}});
+ 
+const sendBtn=document.getElementById('sendBtn'),feed=document.getElementById('feed'),empty=document.getElementById('emptyState');
+ 
+sendBtn.onclick=async()=>{
+  const key=getKey();if(!key){openSettings();return;}
+  const txt=inp.value.trim();if(!txt&&!imgB64)return;
+  sendBtn.disabled=true;sendBtn.textContent='…';
+  if(empty)empty.style.display='none';
+  const loader=document.createElement('div');loader.className='loading-card';loader.innerHTML='<div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span class="loading-txt">Classifying…</span>';
+  feed.prepend(loader);
+  try{
+    const dateStr=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    const sys=`You classify natural language into Apple app items for a family.
+Today is ${dateStr}.
+Return ONLY a JSON array — no markdown, no explanation.
+ 
+Assign a "category" to each item:
+- "school" — school, classes, homework, teachers, PTA, school events
+- "church" — church, service, bible study, ministry, worship
+- "family" — family, the Harvells, home, kids, spouse, household
+- "other"  — everything else
+ 
+Shapes:
+Calendar event: {"type":"calendar","category":"school|church|family|other","title":"string","date":"YYYY-MM-DD or null","start_time":"HH:MM or null","end_time":"HH:MM or null","location":"string or null","description":"string or null","all_day":boolean}
+Reminder: {"type":"reminder","category":"school|church|family|other","title":"string","due_date":"YYYY-MM-DD or null","due_time":"HH:MM or null","notes":"string or null","priority":"low|medium|high"}
+Note: {"type":"note","category":"school|church|family|other","title":"string","content":"string"}
+ 
+Rules: specific times → calendar. Tasks/to-dos → reminder. Ideas/info → note. Return array always. Times in 24h. No date → null.`;
+    const content=[];
+    if(imgB64)content.push({type:'image',source:{type:'base64',media_type:imgMime,data:imgB64}});
+    content.push({type:'text',text:txt||'Extract actionable items from this image.'});
+    const res=await fetch('https://sweet-pine-aff9.katienharvell.workers.dev',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,system:sys,messages:[{role:'user',content}]})});
+    if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err?.error?.message||`HTTP ${res.status}`);}
+    const data=await res.json();
+    const raw=data.content.map(b=>b.text||'').join('');
+    let items=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    if(!Array.isArray(items))items=[items];
+    loader.remove();items.reverse().forEach(addCard);
+    inp.value='';inp.style.height='auto';rmImg.click();
+  }catch(err){
+    loader.remove();
+    const e=document.createElement('div');e.style.cssText='font-size:13px;color:var(--red);padding:4px 0;';
+    e.textContent=err.message.includes('401')?'Invalid API key — tap ⚙ to update it.':'Error: '+err.message;
+    feed.prepend(e);setTimeout(()=>e.remove(),5000);
+  }
+  sendBtn.disabled=false;sendBtn.textContent='Process';
+};
+ 
+function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''}
+function fmtDate(d,t){if(!d)return null;try{const[y,m,dy]=d.split('-').map(Number);let s=new Date(y,m-1,dy).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});if(t){const[h,mi]=t.split(':').map(Number);s+=' · '+new Date(y,m-1,dy,h,mi).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}return s;}catch{return d;}}
+function toICS(d,t){if(!d)return null;const[y,m,dy]=d.split('-');if(!t)return`${y}${m}${dy}`;const[h,mi]=t.split(':');return`${y}${m}${dy}T${h}${mi}00`;}
+function dlFile(content,name,mime){
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(isIOS){
+    window.location.href='data:'+mime+';charset=utf-8,'+encodeURIComponent(content);
+  } else {
+    const blob=new Blob([content],{type:mime});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);
+  }
+}
+function safeFile(s){return(s||'capture').replace(/[^a-z0-9]/gi,'_').slice(0,40);}
+ 
+function dlCalendar(item){
+  const calName=getRoute(item.category,'calendar');
+  const start=toICS(item.date,item.start_time)||'19700101';
+  let end=toICS(item.date,item.end_time);
+  if(!end&&item.start_time&&item.date){const[y,m,d]=item.date.split('-').map(Number);const[h,mi]=item.start_time.split(':').map(Number);const dt=new Date(y,m-1,d,h+1,mi);end=String(dt.getFullYear())+String(dt.getMonth()+1).padStart(2,'0')+String(dt.getDate()).padStart(2,'0')+'T'+String(dt.getHours()).padStart(2,'0')+String(dt.getMinutes()).padStart(2,'0')+'00';}
+  end=end||start;
+  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Capture//EN',`X-WR-CALNAME:${calName}`,'METHOD:PUBLISH','BEGIN:VEVENT',`SUMMARY:${item.title}`,item.all_day?`DTSTART;VALUE=DATE:${start}`:`DTSTART:${start}`,item.all_day?`DTEND;VALUE=DATE:${end}`:`DTEND:${end}`,item.location?`LOCATION:${item.location}`:'',item.description?`DESCRIPTION:${item.description}`:'',`UID:${Date.now()}@capture`,'END:VEVENT','END:VCALENDAR'].filter(Boolean);
+  dlFile(lines.join('\r\n'),safeFile(item.title)+'.ics','text/calendar');
+}
+ 
+function dlReminder(item){
+  const listName=getRoute(item.category,'reminder');
+  const due=toICS(item.due_date,item.due_time);
+  const pri={high:'1',medium:'5',low:'9'}[item.priority]||'0';
+  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Capture//EN',listName?`X-WR-CALNAME:${listName}`:'','BEGIN:VTODO',`SUMMARY:${item.title}`,due?`DUE:${due}`:'',`PRIORITY:${pri}`,item.notes?`DESCRIPTION:${item.notes}`:'',`UID:${Date.now()}@capture`,'END:VTODO','END:VCALENDAR'].filter(Boolean);
+  dlFile(lines.join('\r\n'),safeFile(item.title)+'.ics','text/calendar');
+}
+ 
+const CAT_LABELS={school:'School',church:'Church',family:'Harvells',other:''};
+function routeLabel(item){if(item.type==='note')return CAT_LABELS[item.category]||'';const d=getRoute(item.category,item.type);return d||'Reminders';}
+ 
+function addCard(item){
+  const card=document.createElement('div');card.className='card';
+  const uid='c'+Date.now()+Math.random().toString(36).slice(2,6);
+  const dest=routeLabel(item);
+  const pill=dest?`<span class="route-pill">${esc(dest)}</span>`:'';
+ 
+  if(item.type==='calendar'){
+    const dt=fmtDate(item.date,item.start_time);
+    const meta=[dt,item.location?'📍 '+item.location:null,item.description].filter(Boolean).join('\n');
+    card.innerHTML=`<div class="card-head"><div class="card-icon ci-cal"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="11" rx="1.5" stroke="var(--blue)" stroke-width="1.2"/><line x1="1" y1="5.5" x2="13" y2="5.5" stroke="var(--blue)" stroke-width="1.2"/><line x1="4" y1="0.5" x2="4" y2="3.5" stroke="var(--blue)" stroke-width="1.2" stroke-linecap="round"/><line x1="10" y1="0.5" x2="10" y2="3.5" stroke="var(--blue)" stroke-width="1.2" stroke-linecap="round"/></svg></div><div class="card-info"><div class="card-type-row"><span class="card-type ct-cal">Calendar</span>${pill}</div><div class="card-title">${esc(item.title)}</div></div></div>${meta?`<div class="card-meta">${esc(meta)}</div>`:''}<div class="card-foot"><button class="card-btn btn-cal">Add to Calendar ↓</button></div>`;
+    card.querySelector('.btn-cal').onclick=()=>dlCalendar(item);
+  } else if(item.type==='reminder'){
+    const dt=fmtDate(item.due_date,item.due_time);
+    const pri={high:'⚑ High priority',medium:'Medium priority',low:'Low priority'}[item.priority]||'';
+    const meta=[dt,pri,item.notes].filter(Boolean).join('\n');
+    const remUid='r'+Date.now()+Math.random().toString(36).slice(2,6);
+    const listName=getRoute(item.category,'reminder')||'Reminders';
+    const remText=item.title+(dt?'\n'+dt:'')+(pri?'\n'+pri:'')+(item.notes?'\n'+item.notes:'');
+    card.innerHTML=`<div class="card-head"><div class="card-icon ci-rem"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="var(--orange)" stroke-width="1.2"/><line x1="7" y1="4" x2="7" y2="7.5" stroke="var(--orange)" stroke-width="1.3" stroke-linecap="round"/><circle cx="7" cy="9.5" r="0.8" fill="var(--orange)"/></svg></div><div class="card-info"><div class="card-type-row"><span class="card-type ct-rem">Reminder</span>${pill}</div><div class="card-title">${esc(item.title)}</div></div></div>${meta?`<div class="card-meta">${esc(meta)}</div>`:''}<div class="card-foot"><span class="toast-txt" id="rtxt-${remUid}"></span><button class="card-btn btn-rem" id="radd-${remUid}">Open Reminders →</button></div>`;
+    card.querySelector(`#radd-${remUid}`).onclick=()=>{
+      navigator.clipboard.writeText(remText).then(()=>{
+        card.querySelector(`#rtxt-${remUid}`).textContent='Copied — paste into '+listName;
+        setTimeout(()=>{card.querySelector(`#rtxt-${remUid}`).textContent='';},3000);
+      }).catch(()=>{});
+      setTimeout(()=>{window.location.href='x-apple-reminderkit://';},300);
+    };
+  } else {
+    card.innerHTML=`<div class="card-head"><div class="card-icon ci-note"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="0.5" width="11" height="13" rx="1.5" stroke="var(--green)" stroke-width="1.2"/><line x1="4" y1="4.5" x2="10" y2="4.5" stroke="var(--green)" stroke-width="1.1" stroke-linecap="round"/><line x1="4" y1="7" x2="10" y2="7" stroke="var(--green)" stroke-width="1.1" stroke-linecap="round"/><line x1="4" y1="9.5" x2="7.5" y2="9.5" stroke="var(--green)" stroke-width="1.1" stroke-linecap="round"/></svg></div><div class="card-info"><div class="card-type-row"><span class="card-type ct-note">Note</span>${pill}</div><div class="card-title">${esc(item.title)}</div></div></div>${item.content?`<div class="card-meta">${esc(item.content)}</div>`:''}<div class="card-foot"><span class="toast-txt" id="toast-${uid}"></span><button class="card-btn" id="open-${uid}" style="border-color:var(--border-mid);color:var(--text-2);">Open Notes</button><button class="card-btn btn-note" id="copy-${uid}">Copy</button></div>`;
+    const ct=(item.title||'')+'\n\n'+(item.content||'');
+    card.querySelector(`#copy-${uid}`).onclick=()=>{navigator.clipboard.writeText(ct).then(()=>{card.querySelector(`#toast-${uid}`).textContent='Copied!';setTimeout(()=>{card.querySelector(`#toast-${uid}`).textContent='';},2200);});};
+    card.querySelector(`#open-${uid}`).onclick=()=>{navigator.clipboard.writeText(ct).catch(()=>{});window.location.href='mobilenotes://';};
+  }
+  feed.prepend(card);
+}
+</script>
+</body>
+</html>
