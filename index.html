@@ -241,11 +241,14 @@ function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').re
 function fmtDate(d,t){if(!d)return null;try{const[y,m,dy]=d.split('-').map(Number);let s=new Date(y,m-1,dy).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});if(t){const[h,mi]=t.split(':').map(Number);s+=' · '+new Date(y,m-1,dy,h,mi).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}return s;}catch{return d;}}
 function toICS(d,t){if(!d)return null;const[y,m,dy]=d.split('-');if(!t)return`${y}${m}${dy}`;const[h,mi]=t.split(':');return`${y}${m}${dy}T${h}${mi}00`;}
 function dlFile(content,name,mime){
-  const blob=new Blob([content],{type:mime});
-  const url=URL.createObjectURL(blob);
   const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
-  if(isIOS){window.location.href=url;}
-  else{const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);}
+  if(isIOS){
+    window.location.href='data:'+mime+';charset=utf-8,'+encodeURIComponent(content);
+  } else {
+    const blob=new Blob([content],{type:mime});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);
+  }
 }
 function safeFile(s){return(s||'capture').replace(/[^a-z0-9]/gi,'_').slice(0,40);}
 
