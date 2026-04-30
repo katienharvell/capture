@@ -264,7 +264,8 @@ function dlCalendar(item){
   end=end||start;
   const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Capture//EN',`X-WR-CALNAME:${calName}`,'METHOD:PUBLISH','BEGIN:VEVENT',`SUMMARY:${item.title}`,item.all_day?`DTSTART;VALUE=DATE:${start}`:`DTSTART:${start}`,item.all_day?`DTEND;VALUE=DATE:${end}`:`DTEND:${end}`,item.location?`LOCATION:${item.location}`:'',item.description?`DESCRIPTION:${item.description}`:'',`UID:${Date.now()}@capture`,'END:VEVENT','END:VCALENDAR'].filter(Boolean);
   const ics=lines.join('\r\n');
-  window.location.href='https://sweet-pine-aff9.katienharvell.workers.dev/ics?data='+encodeURIComponent(ics);
+  const icsUrl='https://sweet-pine-aff9.katienharvell.workers.dev/ics?data='+encodeURIComponent(ics);
+  window.open(icsUrl,'_blank');
 }
 
 function dlReminder(item){
