@@ -240,7 +240,13 @@ Rules: specific times → calendar. Tasks/to-dos → reminder. Ideas/info → no
 function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'):''}
 function fmtDate(d,t){if(!d)return null;try{const[y,m,dy]=d.split('-').map(Number);let s=new Date(y,m-1,dy).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});if(t){const[h,mi]=t.split(':').map(Number);s+=' · '+new Date(y,m-1,dy,h,mi).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}return s;}catch{return d;}}
 function toICS(d,t){if(!d)return null;const[y,m,dy]=d.split('-');if(!t)return`${y}${m}${dy}`;const[h,mi]=t.split(':');return`${y}${m}${dy}T${h}${mi}00`;}
-function dlFile(content,name,mime){const blob=new Blob([content],{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);}
+function dlFile(content,name,mime){
+  const blob=new Blob([content],{type:mime});
+  const url=URL.createObjectURL(blob);
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  if(isIOS){window.location.href=url;}
+  else{const a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);}
+}
 function safeFile(s){return(s||'capture').replace(/[^a-z0-9]/gi,'_').slice(0,40);}
 
 function dlCalendar(item){
@@ -279,8 +285,18 @@ function addCard(item){
     const dt=fmtDate(item.due_date,item.due_time);
     const pri={high:'⚑ High priority',medium:'Medium priority',low:'Low priority'}[item.priority]||'';
     const meta=[dt,pri,item.notes].filter(Boolean).join('\n');
-    card.innerHTML=`<div class="card-head"><div class="card-icon ci-rem"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="var(--orange)" stroke-width="1.2"/><line x1="7" y1="4" x2="7" y2="7.5" stroke="var(--orange)" stroke-width="1.3" stroke-linecap="round"/><circle cx="7" cy="9.5" r="0.8" fill="var(--orange)"/></svg></div><div class="card-info"><div class="card-type-row"><span class="card-type ct-rem">Reminder</span>${pill}</div><div class="card-title">${esc(item.title)}</div></div></div>${meta?`<div class="card-meta">${esc(meta)}</div>`:''}<div class="card-foot"><button class="card-btn btn-rem">Add to Reminders ↓</button></div>`;
-    card.querySelector('.btn-rem').onclick=()=>dlReminder(item);
+    const remUid='r'+Date.now()+Math.random().toString(36).slice(2,6);
+    const listName=getRoute(item.category,'reminder')||'Reminders';
+    const remText=item.title+(dt?'\n'+dt:'')+(pri?'\n'+pri:'')+(item.notes?'\n'+item.notes:'');
+    card.innerHTML=`<div class="card-head"><div class="card-icon ci-rem"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="var(--orange)" stroke-width="1.2"/><line x1="7" y1="4" x2="7" y2="7.5" stroke="var(--orange)" stroke-width="1.3" stroke-linecap="round"/><circle cx="7" cy="9.5" r="0.8" fill="var(--orange)"/></svg></div><div class="card-info"><div class="card-type-row"><span class="card-type ct-rem">Reminder</span>${pill}</div><div class="card-title">${esc(item.title)}</div></div></div>${meta?`<div class="card-meta">${esc(meta)}</div>`:''}<div class="card-foot"><span class="toast-txt" id="rtxt-${remUid}"></span><button class="card-btn btn-rem" id="radd-${remUid}">Open Reminders →</button></div>`;
+    document.getElementById(`radd-${remUid}`).onclick=()=>{
+      navigator.clipboard.writeText(remText).then(()=>{
+        const t=document.getElementById(`rtxt-${remUid}`);
+        t.textContent='Copied — paste into '+listName;
+        setTimeout(()=>{t.textContent='';},3000);
+      }).catch(()=>{});
+      setTimeout(()=>{window.location.href='x-apple-reminderkit://';},300);
+    };
   } else {
     card.innerHTML=`<div class="card-head"><div class="card-icon ci-note"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1.5" y="0.5" width="11" height="13" rx="1.5" stroke="var(--green)" stroke-width="1.2"/><line x1="4" y1="4.5" x2="10" y2="4.5" stroke="var(--green)" stroke-width="1.1" stroke-linecap="round"/><line x1="4" y1="7" x2="10" y2="7" stroke="var(--green)" stroke-width="1.1" stroke-linecap="round"/><line x1="4" y1="9.5" x2="7.5" y2="9.5" stroke="var(--green)" stroke-width="1.1" stroke-linecap="round"/></svg></div><div class="card-info"><div class="card-type-row"><span class="card-type ct-note">Note</span>${pill}</div><div class="card-title">${esc(item.title)}</div></div></div>${item.content?`<div class="card-meta">${esc(item.content)}</div>`:''}<div class="card-foot"><span class="toast-txt" id="toast-${uid}"></span><button class="card-btn" id="open-${uid}" style="border-color:var(--border-mid);color:var(--text-2);">Open Notes</button><button class="card-btn btn-note" id="copy-${uid}">Copy</button></div>`;
     const ct=(item.title||'')+'\n\n'+(item.content||'');
